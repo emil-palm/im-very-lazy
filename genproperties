@@ -216,4 +216,3 @@ elif option == 'dealloc':
 elif option == 'init':
 	printInit(ivars)
 
-#printSynth(ivars)
