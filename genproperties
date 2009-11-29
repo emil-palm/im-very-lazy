@@ -1,0 +1,219 @@
+#! /usr/bin/env python
+#im lazy so
+import sys,os
+
+file = sys.argv[2]
+option = sys.argv[1]
+ivars = {}
+position = {}
+
+if(file.endswith(".h")):
+	if os.path.exists(file):
+		fobj = open(file,"r")
+		bracket = False
+		comment = False
+		interface = None
+
+		for line in fobj:
+			orgline = line
+			line = line.strip().strip(";")
+			if line.startswith("/*"):
+				comment = True
+			if line.endswith("*/"):
+				comment = False
+			
+			if line.startswith("//") or comment:
+				continue
+			
+			if line.startswith("@interface"):
+				(subclass,parentclass) = line.replace("@interface","").strip().split(":")
+				interface = subclass.strip()
+				ivars[interface] = []
+			elif line.startswith("@end"):
+				interface = None
+
+			if interface != None and line.endswith("{"):
+				bracket = True
+			elif bracket != False and line.startswith("}"):
+				bracket = False
+			elif bracket != False and interface != None:
+				ivars[interface].append(line)
+		
+def printProperties(ivars):
+	for key in ivars:
+		print "//----- %s properties -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		for x in interface:
+			ib = ""
+
+			if x.strip() == "":
+				print ""
+			else:
+				if x.strip().lower().startswith("iboutlet"):
+					(ib,type,data) = x.strip().split(" ")
+					ib = "%s " % ib
+				else:
+					(type,data) = x.strip().split(" ")
+				if not data.startswith("*m_") and not data.startswith("m_"):
+					continue
+				
+				data = data.strip().replace("m_","")
+				if data.startswith('*'):
+					print "@property(nonatomic,retain) %s%s %s;" % (ib,type,data)
+				else:
+					print "@property(nonatomic) %s %s;" % (type,data)
+
+def printSynth(ivars):
+	for key in ivars:
+		print "//----- %s synthesize -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		for x in interface:
+			if x.strip() == "":
+				continue
+			if x.strip().lower().startswith("iboutlet"):
+				(ib,type,data) = x.strip().split(" ")
+			else:
+				(type,data) = x.strip().split(" ")
+	
+			if not data.startswith("*m_") and not data.startswith("m_"):
+				#print data
+				continue
+		
+			withUnderscore = data.strip().replace("*","")
+			withoutUnderscore = withUnderscore.replace("m_","")
+			synth = ", ".join(["%s = %s" % (withoutUnderscore,withUnderscore),synth])
+			i = i+1
+			if i == 5:
+				print "".join([" ".join(["@synthesize",synth.rstrip().rstrip(",")]),";"])
+				synth = ""
+				i=0
+		
+		if synth != "":
+			print "".join([" ".join(["@synthesize",synth.rstrip().rstrip(",")]),";"])
+
+def printDealloc(ivars):
+	for key in ivars:
+		print "//----- %s dealloc -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		print "- (void) dealloc {"
+		for x in interface:
+			if x.strip() == "":
+				print ""
+				continue
+
+			if x.strip().lower().startswith("iboutlet"):
+				(ib,type,data) = x.strip().split(" ")
+			else:
+				(type,data) = x.strip().split(" ")
+			if data.startswith('*'):
+				print "\t[%s release]; %s = nil;" % (data.replace("*","",1), data.replace("*","",1))
+	print "\t[super dealloc];"
+	print "}"
+
+def printInit(ivars):
+	for key in ivars:
+		print "//----- %s init -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		print "- (id) init {"
+		print "\t if( self = [super init] ) {"
+		for x in interface:
+			if x.strip() == "":
+				print ""
+				continue
+
+			if x.strip().lower().startswith("iboutlet"):
+				(ib,type,data) = x.strip().split(" ")
+			else:
+				(type,data) = x.strip().split(" ")
+
+			if type.lower().find("array") != -1:
+				print "\t\t%s = [[%s alloc] init];" % (data.replace("*","",1),type)
+			elif type.lower().find("bool") > -1:
+				print "\t\t%s = NO;" % data
+			else:
+				print "\t\t%s = nil;" % (data.replace("*","",1))
+				
+	print "\t}"
+	print "\treturn self;"
+	print "}"
+			
+def printCoding(ivars):
+	for key in ivars:
+		print "//----- %s initWithCoder -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		print "- (id) initWithCoder:(NSCoder *)aCoder {"
+		print "\tself = [[%s alloc] init];" % key
+		print "\t if( self != nil ) {"
+		for x in interface:
+			if x.strip() == "":
+				print ""
+				continue
+
+			if x.strip().lower().startswith("iboutlet"):
+				continue;
+			else:
+				(type,data) = x.strip().split(" ")
+
+			
+			data = data.replace("*","",1)
+			if type.lower().find("bool") > -1:
+				print "\t\t%s = [aCoder decodeBoolForKey:@\"%s\"];" % (data,data)
+			else:
+				print "\t\t%s = [aCoder decodeObjectForKey:@\"%s\"];" % (data,data)
+				
+	print "\t}"
+	print "\treturn self;"
+	print "}"
+
+	for key in ivars:
+		print "//----- %s encodeWithCoder -------" % key
+		interface = ivars[key]
+		synth = ""
+		i=0
+		print "- (void) encodeWithCoder:(NSCoder *)aCoder {"
+		for x in interface:
+			if x.strip() == "":
+				print ""
+				continue
+
+			if x.strip().lower().startswith("iboutlet"):
+				continue;
+			else:
+				(type,data) = x.strip().split(" ")
+
+			
+			data = data.replace("*","",1)
+			if type.lower().find("bool") > -1:
+				print "\t[aCoder encodeBool:%s forKey:@\"%s\"];" % (data,data)
+			else:
+				print "\t[aCoder encodeObject:%s forKey:@\"%s\"];" % (data,data)
+				
+	print "}"
+
+			
+if option == "both":
+	printProperties(ivars)
+	printSynth(ivars)
+	printInit(ivars)
+	printDealloc(ivars)
+	printCoding(ivars)
+elif option == "synth":
+	print printSynth(ivars)
+elif option == "properties":
+	print printProperties(ivars)
+elif option == 'dealloc':
+	printDealloc(ivars)
+elif option == 'init':
+	printInit(ivars)
+
+#printSynth(ivars)
