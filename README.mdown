@@ -1,0 +1,61 @@
+# Im-Very-Lazy
+A simple python script to generate objective-c properties and other Obj-C / Xcode related things.
+It all started with i had a project where i needed have 40-45 different ivars with correseponding property statements, so i wrote this little script.
+
+It looks like crap, its almost certainly crap but it works for my usage.
+
+# Installation
+
+git clone git://github.com/mrevilme/im-very-lazy.git
+chmod +x im-very-lazy/genproperties
+ln -s im-very-lazy/genproperties /usr/local/bin/genproperties
+
+# Usage
+genproperties both HEADER.h
+
+# Arguments
+The arguments are not synced with the amount of commands.
+I usally only use "both" which produces the output above.
+
+# Info
+
+It reads a header file like the following:
+
+    NSObject *m_foobar;
+
+and prints this:
+
+    //----- TestObject properties -------
+    @property(nonatomic,retain) NSObject *testObject;
+    //----- TestObject synthesize -------
+    @synthesize testObject = m_testObject;
+    //----- TestObject init -------
+    - (id) init {
+	    if( self = [super init] ) {
+		    m_testObject = nil;
+	    }
+	    return self;
+    }
+
+    //----- TestObject dealloc -------
+    - (void) dealloc {
+	    [m_testObject release]; m_testObject = nil;
+	    [super dealloc];
+    }
+
+    //----- TestObject initWithCoder -------
+    - (id) initWithCoder:(NSCoder *)aCoder {
+	    self = [[TestObject alloc] init];
+	    if( self != nil ) {
+		    m_testObject = [aCoder decodeObjectForKey:@"m_testObject"];
+	    } 
+	    return self;
+    }
+
+    //----- TestObject encodeWithCoder -------
+    - (void) encodeWithCoder:(NSCoder *)aCoder {
+	    [aCoder encodeObject:m_testObject forKey:@"m_testObject"];
+    }
+
+Enjoy
+
