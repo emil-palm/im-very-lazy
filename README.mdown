@@ -21,7 +21,9 @@ I usally only use "both" which produces the output above.
 
 It reads a header file like the following:
 
-    NSObject *m_foobar;
+    @interface TestObject : NSObject {
+	   NSObject *m_testObject;
+    }
 
 and prints this:
 
