@@ -6,9 +6,9 @@ It looks like crap, its almost certainly crap but it works for my usage.
 
 # Installation
 
-git clone git://github.com/mrevilme/im-very-lazy.git
-chmod +x im-very-lazy/genproperties
-sudo ln -s $PWD/im-very-lazy/genproperties /usr/local/bin/genproperties
+    git clone git://github.com/mrevilme/im-very-lazy.git
+    chmod +x im-very-lazy/genproperties
+    sudo ln -s $PWD/im-very-lazy/genproperties /usr/local/bin/genproperties
 
 # Usage
 genproperties both HEADER.h
