@@ -169,7 +169,7 @@ def printCoding(ivars):
 			if type.lower().find("bool") > -1:
 				print "\t\t%s = [aCoder decodeBoolForKey:@\"%s\"];" % (data,data)
 			else:
-				print "\t\t%s = [aCoder decodeObjectForKey:@\"%s\"];" % (data,data)
+				print "\t\t%s = [[aCoder decodeObjectForKey:@\"%s\"] retain];" % (data,data)
 				
 		print "\t}"
 		print "\treturn self;"
