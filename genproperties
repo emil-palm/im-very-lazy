@@ -113,8 +113,8 @@ def printDealloc(ivars):
 				(type,data) = x.strip().split(" ")
 			if data.startswith('*'):
 				print "\t[%s release]; %s = nil;" % (data.replace("*","",1), data.replace("*","",1))
-	print "\t[super dealloc];"
-	print "}"
+		print "\t[super dealloc];"
+		print "}"
 
 def printInit(ivars):
 	for key in ivars:
@@ -141,9 +141,9 @@ def printInit(ivars):
 			else:
 				print "\t\t%s = nil;" % (data.replace("*","",1))
 				
-	print "\t}"
-	print "\treturn self;"
-	print "}"
+		print "\t}"
+		print "\treturn self;"
+		print "}"
 			
 def printCoding(ivars):
 	for key in ivars:
@@ -171,9 +171,9 @@ def printCoding(ivars):
 			else:
 				print "\t\t%s = [aCoder decodeObjectForKey:@\"%s\"];" % (data,data)
 				
-	print "\t}"
-	print "\treturn self;"
-	print "}"
+		print "\t}"
+		print "\treturn self;"
+		print "}"
 
 	for key in ivars:
 		print "//----- %s encodeWithCoder -------" % key
@@ -198,7 +198,7 @@ def printCoding(ivars):
 			else:
 				print "\t[aCoder encodeObject:%s forKey:@\"%s\"];" % (data,data)
 				
-	print "}"
+		print "}"
 
 			
 if option == "both":
