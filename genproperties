@@ -4,6 +4,10 @@ import sys,os
 
 file = sys.argv[2]
 option = sys.argv[1]
+if(len(sys.argv) == 4):
+	extra = sys.argv[3]
+else:
+	extra = None
 ivars = {}
 position = {}
 
@@ -60,10 +64,16 @@ def printProperties(ivars):
 					continue
 				
 				data = data.strip().replace("m_","")
-				if data.startswith('*'):
-					print "@property(nonatomic,retain) %s%s %s;" % (ib,type,data)
+				if(extra):
+					extraString = ",readonly"
 				else:
-					print "@property(nonatomic) %s %s;" % (type,data)
+					extraString = ""
+
+				if data.startswith('*'):
+					print "@property(nonatomic,retain%s) %s%s %s;" % (extraString,ib,type,data)
+				else:
+					print "@property(nonatomic%s) %s %s;" % (extraString,type,data)
+
 
 def printSynth(ivars):
 	for key in ivars:
@@ -202,11 +212,23 @@ def printCoding(ivars):
 
 			
 if option == "both":
-	printProperties(ivars)
-	printSynth(ivars)
-	printInit(ivars)
-	printDealloc(ivars)
-	printCoding(ivars)
+	for x in ivars:
+		ivar={}
+		ivar[x] = ivars[x]
+		printProperties(ivar)
+		printSynth(ivar)
+		printInit(ivar)
+		printDealloc(ivar)
+		printCoding(ivar)
+if option == "norm":
+	for x in ivars:
+		ivar={}
+		ivar[x] = ivars[x]
+		printProperties(ivar)
+		printSynth(ivar)
+		printInit(ivar)
+		printDealloc(ivar)
+
 elif option == "synth":
 	print printSynth(ivars)
 elif option == "properties":
