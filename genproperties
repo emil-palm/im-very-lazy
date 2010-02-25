@@ -59,8 +59,14 @@ def printProperties(ivars):
 					(ib,type,data) = x.strip().split(" ")
 					ib = "%s " % ib
 				else:
-					(type,data) = x.strip().split(" ")
-				if not data.startswith("*m_") and not data.startswith("m_"):
+					try:
+						(type,data) = x.strip().split(" ")
+					except:
+						data = x.strip().split(" ");
+						data = data[0]
+						type = ""
+
+				if not data.startswith("*m_") and not data.startswith("m_") or data.startswith("@"):
 					continue
 				
 				data = data.strip().replace("m_","")
@@ -87,7 +93,13 @@ def printSynth(ivars):
 			if x.strip().lower().startswith("iboutlet"):
 				(ib,type,data) = x.strip().split(" ")
 			else:
-				(type,data) = x.strip().split(" ")
+				try:
+					(type,data) = x.strip().split(" ")
+				except:
+					data = x.strip().split(" ");
+					data = data[0]
+					type = ""
+
 	
 			if not data.startswith("*m_") and not data.startswith("m_"):
 				#print data
@@ -119,6 +131,8 @@ def printDealloc(ivars):
 
 			if x.strip().lower().startswith("iboutlet"):
 				(ib,type,data) = x.strip().split(" ")
+			elif x.strip().lower().startswith("@"):
+				continue
 			else:
 				(type,data) = x.strip().split(" ")
 			if data.startswith('*'):
@@ -141,8 +155,15 @@ def printInit(ivars):
 
 			if x.strip().lower().startswith("iboutlet"):
 				(ib,type,data) = x.strip().split(" ")
+			elif x.strip().lower().startswith("@"):
+				continue
 			else:
-				(type,data) = x.strip().split(" ")
+				try:
+					(type,data) = x.strip().split(" ")
+				except:
+					data = x.strip().split(" ");
+					data = data[0]
+					type = ""
 
 			if type.lower().find("array") != -1:
 				print "\t\t%s = [[%s alloc] init];" % (data.replace("*","",1),type)
@@ -162,14 +183,13 @@ def printCoding(ivars):
 		synth = ""
 		i=0
 		print "- (id) initWithCoder:(NSCoder *)aCoder {"
-		print "\tself = [[%s alloc] init];" % key
-		print "\t if( self != nil ) {"
+		print "\tif( self = [self init] ) {"
 		for x in interface:
 			if x.strip() == "":
 				print ""
 				continue
 
-			if x.strip().lower().startswith("iboutlet"):
+			if x.strip().lower().startswith("iboutlet") or x.strip().lower().startswith("@"):
 				continue;
 			else:
 				(type,data) = x.strip().split(" ")
@@ -196,7 +216,7 @@ def printCoding(ivars):
 				print ""
 				continue
 
-			if x.strip().lower().startswith("iboutlet"):
+			if x.strip().lower().startswith("iboutlet") or x.strip().lower().startswith("@"):
 				continue;
 			else:
 				(type,data) = x.strip().split(" ")
@@ -209,6 +229,30 @@ def printCoding(ivars):
 				print "\t[aCoder encodeObject:%s forKey:@\"%s\"];" % (data,data)
 				
 		print "}"
+def printCopying(ivars):
+	for key in ivars:
+                print "//----- %s copyWithZone -------" % key
+                interface = ivars[key]
+                synth = ""
+                i=0
+		print "- (id) copyWithZone:(NSZone *) zone {"
+		print "\t%s *obj = [[%s alloc] init];" % (key,key)
+		for x in interface:
+                        if x.strip() == "":
+                                print ""
+                                continue
+
+                        if x.strip().lower().startswith("iboutlet") or x.strip().lower().startswith("@"):
+                                continue;
+                        else:
+                                (type,data) = x.strip().split(" ")
+
+			prop = data.strip().replace("m_","")
+                        data = data.replace("*","",1)
+                        prop = prop.replace("*","",1)
+			print "\tobj.%s = %s;" % (prop,data)
+		print "\treturn obj;";
+       		print "}"
 
 			
 if option == "both":
@@ -220,6 +264,7 @@ if option == "both":
 		printInit(ivar)
 		printDealloc(ivar)
 		printCoding(ivar)
+		printCopying(ivar)
 if option == "norm":
 	for x in ivars:
 		ivar={}
